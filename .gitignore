@@ -1,0 +1,19 @@
+# Project exclude paths
+/changgou_canal/target/
+/changgou_common/target/
+/changgou_common_db/target/
+/changgou_eureka/target/
+/changgou_gateway/target/
+/changgou_service/changgou_service_business/target/
+/changgou_service/changgou_service_config/target/
+/changgou_service/changgou_service_goods/target/
+/changgou_service/changgou_service_order/target/
+/changgou_service/changgou_service_system/target/
+/changgou_service/changgou_service_user/target/
+/changgou_service_api/changgou_service_business_api/target/
+/changgou_service_api/changgou_service_config_api/target/
+/changgou_service_api/changgou_service_goods_api/target/
+/changgou_service_api/changgou_service_order_api/target/
+/changgou_service_api/changgou_service_system_api/target/
+/changgou_service_api/changgou_service_user_api/target/
+/changgou_web/target/
