@@ -16,13 +16,13 @@
         <module>changgou_web</module>
         <module>changgou_common</module>
         <module>changgou_common_db</module>
-		<module>changgou_canal</module>
+        <module>changgou_canal</module>
     </modules>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.0.RELEASE</version>
+        <version>2.1.4.RELEASE</version>
     </parent>
 
     <properties>
