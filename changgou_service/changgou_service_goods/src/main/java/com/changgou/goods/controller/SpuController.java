@@ -3,6 +3,7 @@ package com.changgou.goods.controller;
 import com.changgou.entity.PageResult;
 import com.changgou.entity.Result;
 import com.changgou.entity.StatusCode;
+import com.changgou.goods.pojo.Goods;
 import com.changgou.goods.pojo.Spu;
 import com.changgou.goods.service.SpuService;
 import com.github.pagehelper.Page;
@@ -41,40 +42,34 @@ public class SpuController {
         return new Result(true, StatusCode.OK, "查询成功", spuList);
     }
 
-    /***
-     * 根据ID查询数据
-     * @param id
-     * @return
-     */
     @GetMapping("/{id}")
     public Result findById(@PathVariable String id) {
-        Spu spu = spuService.findById(id);
-        return new Result(true, StatusCode.OK, "查询成功", spu);
+        Goods goods = spuService.findGoodsById(id);
+        return new Result(true, StatusCode.OK, "查询成功", goods);
     }
 
 
     /***
      * 新增数据
-     * @param spu
+     * @param goods
      * @return
      */
     @PostMapping
-    public Result add(@RequestBody Spu spu) {
-        spuService.add(spu);
+    public Result add(@RequestBody Goods goods) {
+        spuService.add(goods);
         return new Result(true, StatusCode.OK, "添加成功");
     }
 
 
     /***
      * 修改数据
-     * @param spu
+     * @param goods
      * @param id
      * @return
      */
     @PutMapping(value = "/{id}")
-    public Result update(@RequestBody Spu spu, @PathVariable String id) {
-        spu.setId(id);
-        spuService.update(spu);
+    public Result update(@RequestBody Goods goods, @PathVariable String id) {
+        spuService.update(goods);
         return new Result(true, StatusCode.OK, "修改成功");
     }
 

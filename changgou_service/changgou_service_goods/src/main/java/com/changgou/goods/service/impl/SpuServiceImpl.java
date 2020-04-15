@@ -1,14 +1,27 @@
 package com.changgou.goods.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.changgou.goods.dao.BrandMapper;
+import com.changgou.goods.dao.CategoryBrandMapper;
+import com.changgou.goods.dao.CategoryMapper;
+import com.changgou.goods.dao.SkuMapper;
 import com.changgou.goods.dao.SpuMapper;
+import com.changgou.goods.pojo.Brand;
+import com.changgou.goods.pojo.Category;
+import com.changgou.goods.pojo.CategoryBrand;
+import com.changgou.goods.pojo.Goods;
+import com.changgou.goods.pojo.Sku;
 import com.changgou.goods.pojo.Spu;
 import com.changgou.goods.service.SpuService;
+import com.changgou.test.IdWorker;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +30,21 @@ public class SpuServiceImpl implements SpuService {
 
     @Autowired
     private SpuMapper spuMapper;
+
+    @Autowired
+    private CategoryMapper categoryMapper;
+
+    @Autowired
+    private SkuMapper skuMapper;
+
+    @Autowired
+    private BrandMapper brandMapper;
+
+    @Autowired
+    private CategoryBrandMapper categoryBrandMapper;
+
+    @Autowired
+    private IdWorker idWorker;
 
     /**
      * 查询全部列表
@@ -43,11 +71,82 @@ public class SpuServiceImpl implements SpuService {
     /**
      * 增加
      *
-     * @param spu
+     * @param goods
      */
     @Override
-    public void add(Spu spu) {
-        spuMapper.insert(spu);
+    @Transactional(rollbackFor = Exception.class)
+    public void add(Goods goods) {
+        Spu spu = goods.getSpu();
+        long spuId = idWorker.nextId();
+        spu.setId(String.valueOf(spuId));
+        spu.setIsDelete("0");
+        spu.setIsMarketable("0");
+        spu.setStatus("0");
+        spuMapper.insertSelective(spu);
+
+        //保存sku集合数据到数据库
+        saveSkuList(goods);
+    }
+
+    /**
+     * 保存sku列表
+     *
+     * @param goods
+     */
+    private void saveSkuList(Goods goods) {
+        //获取spu对象
+        Spu spu = goods.getSpu();
+        //当前日期
+        Date date = new Date();
+        //获取品牌对象
+        Brand brand = brandMapper.selectByPrimaryKey(spu.getBrandId());
+        //获取分类对象
+        Category category = categoryMapper.selectByPrimaryKey(spu.getCategory3Id());
+
+        /**
+         * 添加分类与品牌之间的关联
+         */
+        CategoryBrand categoryBrand = new CategoryBrand();
+        categoryBrand.setBrandId(spu.getBrandId());
+        categoryBrand.setCategoryId(spu.getCategory3Id());
+        int count = categoryBrandMapper.selectCount(categoryBrand);
+        //判断是否有这个品牌和分类的关系数据
+        if (count == 0) {
+            //如果没有关系数据则添加品牌和分类关系数据
+            categoryBrandMapper.insert(categoryBrand);
+        }
+
+
+        //获取sku集合对象
+        List<Sku> skuList = goods.getSkuList();
+        if (skuList != null) {
+            for (Sku sku : skuList) {
+                //设置sku主键ID
+                sku.setId(String.valueOf(idWorker.nextId()));
+                //设置sku规格
+                if (sku.getSpec() == null || "".equals(sku.getSpec())) {
+                    sku.setSpec("{}");
+                }
+                //设置sku名称(商品名称 + 规格)
+                StringBuilder name = new StringBuilder(spu.getName());
+                //将规格json字符串转换成Map
+                Map<String, String> specMap = JSON.parseObject(sku.getSpec(), Map.class);
+                if (specMap != null && specMap.size() > 0) {
+                    for (String value : specMap.values()) {
+                        name.append(" ").append(value);
+                    }
+                }
+
+                sku.setName(name.toString());
+                sku.setSpuId(spu.getId());
+                sku.setCreateTime(date);
+                sku.setUpdateTime(date);
+                sku.setCategoryId(category.getId());
+                sku.setCategoryName(category.getName());
+                sku.setBrandName(brand.getName());
+                skuMapper.insertSelective(sku);
+            }
+        }
     }
 
 
@@ -216,4 +315,41 @@ public class SpuServiceImpl implements SpuService {
         return example;
     }
 
+    /**
+     * 根据ID查询商品
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public Goods findGoodsById(String id) {
+        //查询spu
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+
+        //查询SKU 列表
+        Example example = new Example(Sku.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("spuId", id);
+        List<Sku> skuList = skuMapper.selectByExample(example);
+
+        //封装，返回
+        Goods goods = new Goods();
+        goods.setSpu(spu);
+        goods.setSkuList(skuList);
+        return goods;
+    }
+
+    @Override
+    public void update(Goods goods) {
+        //取出spu部分
+        Spu spu = goods.getSpu();
+        spuMapper.updateByPrimaryKey(spu);
+        //删除原sku列表
+        Example example = new Example(Sku.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("spuId", spu.getId());
+        skuMapper.deleteByExample(example);
+
+        saveSkuList(goods);
+    }
 }
