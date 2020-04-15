@@ -70,5 +70,5 @@ public interface SpecService {
      * @param categoryName
      * @return
      */
-    public List<Map> findListByCategoryName(String categoryName);
+    List<Map> findListByCategoryName(String categoryName);
 }

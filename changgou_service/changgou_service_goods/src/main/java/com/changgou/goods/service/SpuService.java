@@ -79,4 +79,39 @@ public interface SpuService {
      */
     void update(Goods goods);
 
+    /**
+     * 审核
+     *
+     * @param id
+     */
+    void audit(String id);
+
+    /**
+     * 下架商品
+     *
+     * @param id
+     */
+    void pull(String id);
+
+    /**
+     * 上架商品
+     *
+     * @param id
+     */
+    void put(String id);
+
+    /**
+     * 恢复数据
+     *
+     * @param id
+     */
+    void restore(String id);
+
+    /**
+     * 物理删除
+     *
+     * @param id
+     */
+    void realDelete(String id);
+
 }

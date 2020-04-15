@@ -167,7 +167,14 @@ public class SpuServiceImpl implements SpuService {
      */
     @Override
     public void delete(String id) {
-        spuMapper.deleteByPrimaryKey(id);
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        //检查是否下架的商品
+        if (!spu.getIsMarketable().equals("0")) {
+            throw new RuntimeException("必须先下架再删除！");
+        }
+        spu.setIsDelete("1");//删除
+        spu.setStatus("0");//未审核
+        spuMapper.updateByPrimaryKeySelective(spu);
     }
 
 
@@ -351,5 +358,88 @@ public class SpuServiceImpl implements SpuService {
         skuMapper.deleteByExample(example);
 
         saveSkuList(goods);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void audit(String id) {
+        //查询spu对象
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        if (spu == null) {
+            throw new RuntimeException("当前商品不存在");
+        }
+        //判断当前spu是否处于删除状态
+        if ("1".equals(spu.getIsDelete())) {
+            throw new RuntimeException("当前商品处于删除状态");
+        }
+        //不处于删除状态,修改审核状态为1,上下架状态为1
+        spu.setStatus("1");
+        spu.setIsMarketable("1");
+        //执行修改操作
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void pull(String id) {
+        //查询spu
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        if (spu == null) {
+            throw new RuntimeException("当前商品不存在");
+        }
+        //判断当前商品是否处于删除状态
+        if ("1".equals(spu.getIsDelete())) {
+            throw new RuntimeException("当前商品处于删除状态");
+        }
+        //商品处于未删除状态的话,则修改上下架状态为已下架(0)
+        spu.setIsMarketable("0");
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    /**
+     * 上架商品
+     *
+     * @param id
+     */
+    @Override
+    public void put(String id) {
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        if (!spu.getStatus().equals("1")) {
+            throw new RuntimeException("未通过审核的商品不能上架！");
+        }
+        spu.setIsMarketable("1");//上架状态
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    /**
+     * 恢复数据
+     *
+     * @param id
+     */
+    @Override
+    public void restore(String id) {
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        //检查是否删除的商品
+        if (!spu.getIsDelete().equals("1")) {
+            throw new RuntimeException("此商品未删除！");
+        }
+        spu.setIsDelete("0");//未删除
+        spu.setStatus("0");//未审核
+        spuMapper.updateByPrimaryKeySelective(spu);
+    }
+
+    /***
+     *  物理删除
+     * @param id
+     */
+    @Override
+    public void realDelete(String id) {
+        Spu spu = spuMapper.selectByPrimaryKey(id);
+        //检查是否删除的商品
+        if (!spu.getIsDelete().equals("1")) {
+            throw new RuntimeException("此商品未删除！");
+        }
+        spuMapper.deleteByPrimaryKey(id);
+
     }
 }
