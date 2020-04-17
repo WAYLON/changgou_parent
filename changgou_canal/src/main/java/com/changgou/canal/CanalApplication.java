@@ -1,4 +1,4 @@
-package com.itheima.canal;
+package com.changgou.canal;
 
 import com.xpand.starter.canal.annotation.EnableCanalClient;
 import org.springframework.boot.SpringApplication;

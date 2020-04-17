@@ -1,4 +1,4 @@
-package com.itheima.canal.listener;
+package com.changgou.canal.listener;
 
 import com.alibaba.otter.canal.protocol.CanalEntry;
 import com.xpand.starter.canal.annotation.CanalEventListener;
