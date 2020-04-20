@@ -19,4 +19,11 @@ public interface ESManagerService {
      */
     public void importDataToESBySpuId(String spuId);
 
+    /**
+     * 根据souid删除es索引库中相关的sku数据
+     *
+     * @param spuId
+     */
+    void delDataBySpuId(String spuId);
+
 }
