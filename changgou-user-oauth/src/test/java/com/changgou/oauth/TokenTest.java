@@ -43,16 +43,16 @@ public class TokenTest {
         String authUrl = uri + "/oauth/token";
 
         //1、header信息，包括了http basic认证信息
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         //进行Base64编码,并将编码后的认证数据放到头文件中
         String httpbasic = httpbasic("changgou", "changgou");
         headers.add("Authorization", httpbasic);
         //2、指定认证类型、账号、密码
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<String, String>();
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "password");
         body.add("username", "itheima");
         body.add("password", "itheima");
-        HttpEntity<MultiValueMap<String, String>> multiValueMapHttpEntity = new HttpEntity<MultiValueMap<String, String>>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> multiValueMapHttpEntity = new HttpEntity<>(body, headers);
         //指定 restTemplate当遇到400或401响应时候也不要抛出异常，也要正常返回值
         restTemplate.setErrorHandler(new DefaultResponseErrorHandler() {
             @Override
