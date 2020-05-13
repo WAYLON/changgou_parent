@@ -52,6 +52,12 @@
             <artifactId>changgou_service_user_api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+
+        <!--thymeleaf-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
