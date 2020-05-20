@@ -7,6 +7,7 @@ import com.changgou.user.pojo.User;
 import com.changgou.user.service.UserService;
 import com.github.pagehelper.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,7 @@ public class UserController {
      * @return
      */
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('goods_list')")
     public Result findAll() {
         List<User> userList = userService.findAll();
         return new Result(true, StatusCode.OK, "查询成功", userList);
