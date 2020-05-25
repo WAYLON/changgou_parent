@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @CrossOrigin
 @RequestMapping("/cart")
@@ -33,5 +35,14 @@ public class CartController {
         cartService.addCart(skuId, num, username);
 
         return new Result(true, StatusCode.OK, "加入购物车成功");
+    }
+
+    @GetMapping("/list")
+    public Map list(){
+        //动态获取当前人信息,暂时静态
+        String username = "itcast";
+        //String username = tokenDecode.getUserInfo().get("username");
+        Map map = cartService.list(username);
+        return map;
     }
 }
