@@ -2,7 +2,6 @@ package com.changgou.web.gateway.filter;
 
 import com.changgou.web.gateway.service.AuthService;
 import org.apache.commons.lang.StringUtils;
-import org.bouncycastle.util.encoders.UrlBase64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -17,42 +16,53 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthFilter implements GlobalFilter, Ordered {
 
-    public static final String Authorization = "Authorization";
+    private static final String LOGIN_URL = "http://localhost:8001/api/oauth/toLogin";
 
     @Autowired
     private AuthService authService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-
-        //获取当前请求对象
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
 
-        String path = request.getURI().getPath();
+        //1.判断当前请求路径是否为登录请求,如果是,则直接放行
+            String path = request.getURI().getPath();
         if ("/api/oauth/login".equals(path) || !URLFilter.hasAuthorize(path)) {
-            //放行
+            //直接放行
             return chain.filter(exchange);
         }
-        //判断cookie上是否存在jti
+
+        //2.从cookie中获取jti的值,如果该值不存在,拒绝本次访问
         String jti = authService.getJtiFromCookie(request);
         if (StringUtils.isEmpty(jti)) {
-            //拒绝访问,请求跳转
-            response.setStatusCode(HttpStatus.UNAUTHORIZED);
-            return response.setComplete();
+            //拒绝访问
+            /*response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return response.setComplete();*/
+            //跳转登录页面
+            return this.toLoginPage(LOGIN_URL + "?FROM=" + request.getURI().getPath(), exchange);
         }
 
-        //判断redis中token是否存在
-        String redisToken = authService.getJwtFromRedis(jti);
-        if (StringUtils.isEmpty(redisToken)) {
-            //拒绝访问，请求跳转
-            response.setStatusCode(HttpStatus.UNAUTHORIZED);
-            return response.setComplete();
+        //3.从redis中获取jwt的值,如果该值不存在,拒绝本次访问
+        String jwt = authService.getJwtFromRedis(jti);
+        if (StringUtils.isEmpty(jwt)) {
+            //拒绝访问
+            /*response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return response.setComplete();*/
+            return this.toLoginPage(LOGIN_URL, exchange);
         }
 
-        //校验通过 , 请求头增强，放行
-        request.mutate().header(Authorization, "Bearer " + redisToken);
+        //4.对当前的请求对象进行增强,让它会携带令牌的信息
+        request.mutate().header("Authorization", "Bearer " + jwt);
         return chain.filter(exchange);
+    }
+
+    //跳转登录页面
+    private Mono<Void> toLoginPage(String loginUrl, ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.SEE_OTHER);
+        response.getHeaders().set("Location", loginUrl);
+        return response.setComplete();
     }
 
     @Override
